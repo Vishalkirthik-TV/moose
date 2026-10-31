@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { useChatStore } from '@/lib/store';
-import { sendChatMessage, type Message } from '@/lib/openai';
-import { searchWeb } from '@/lib/search';
+import { requestChatAnswer, requestWebSearch } from '@/lib/api';
+import type { Message } from '@/lib/openai';
 
 export function useChat() {
+    const { getToken } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -14,6 +16,8 @@ export function useChat() {
         addMessage,
         updateLastMessage,
         updateConversationTitle,
+        providerId,
+        modelId,
     } = useChatStore();
 
     const activeConversation = getActiveConversation();
@@ -29,7 +33,14 @@ export function useChat() {
         scrollToBottom();
     }, [activeConversation?.messages, scrollToBottom]);
 
-    const sendMessage = useCallback(async (content: string) => {
+    const sendMessage = useCallback(async (
+        content: string,
+        {
+            webSearchEnabled = false,
+            thinkingEnabled = false,
+            attachments = [],
+        }: { webSearchEnabled?: boolean; thinkingEnabled?: boolean; attachments?: File[] } = {}
+    ) => {
         const prompt = content.trim();
         const conversationId = activeConversationId;
         if (!prompt || !conversationId || isLoading) return;
@@ -39,7 +50,11 @@ export function useChat() {
         let hasAssistantPlaceholder = false;
 
         // Add user message
-        const userMessage: Message = { role: 'user', content: prompt };
+        const userMessage: Message = {
+            role: 'user',
+            content: prompt,
+            attachments: attachments.map((file) => file.name),
+        };
         addMessage(conversationId, userMessage);
 
         // Update conversation title if it's the first message
@@ -49,15 +64,19 @@ export function useChat() {
         }
 
         try {
-            // 1. Perform Search
+            const token = await getToken();
+            if (!token) throw new Error('Your sign-in session is unavailable. Please sign in again.');
+
             let searchContext = '';
             let sources: Message['sources'] = [];
 
-            try {
-                const searchResponse = await searchWeb(prompt);
-                if (searchResponse.results.length > 0) {
-                    sources = searchResponse.results;
-                    searchContext = `
+            if (webSearchEnabled) {
+                const searchResponse = await requestWebSearch(token, prompt);
+                if (searchResponse.results.length === 0) {
+                    throw new Error('Web search found no results. Try a different query or turn web search off.');
+                }
+                sources = searchResponse.results;
+                searchContext = `
 Search Results:
 ${searchResponse.results.map((r, i) => `[${i + 1}] "${r.title}" - ${r.snippet} (Source: ${r.link})`).join('\n')}
 
@@ -69,9 +88,6 @@ INSTRUCTIONS:
 - Format your answer in Markdown. Use bold for key terms.
 - Be objective and direct.
 `;
-                }
-            } catch (searchErr) {
-                console.error('Search failed, falling back to pure LLM:', searchErr);
             }
 
             // Prepare messages for API
@@ -100,7 +116,7 @@ INSTRUCTIONS:
             hasAssistantPlaceholder = true;
 
             // Call API
-            const response = await sendChatMessage(allMessages);
+            const response = await requestChatAnswer(token, allMessages, providerId, modelId, thinkingEnabled);
             if (!response.trim()) {
                 throw new Error('The AI service returned an empty answer. Please try again.');
             }
@@ -120,7 +136,10 @@ INSTRUCTIONS:
         activeConversation,
         activeConversationId,
         addMessage,
+        getToken,
         isLoading,
+        modelId,
+        providerId,
         updateConversationTitle,
         updateLastMessage,
     ]);
