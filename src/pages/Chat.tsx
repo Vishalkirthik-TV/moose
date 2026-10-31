@@ -11,7 +11,7 @@ import { useProviderModels } from '@/hooks/useProviderModels';
 
 export function Chat() {
     const { messages, isLoading, error, sendMessage, messagesEndRef } = useChat();
-    const { modelId, models, isLoading: areModelsLoading, selectedModel, error: modelError } = useProviderModels();
+    const { providerId, modelId, models, isLoading: areModelsLoading, selectedModel, error: modelError } = useProviderModels();
     const activeConversationId = useChatStore((state) => state.activeConversationId);
     const setModelId = useChatStore((state) => state.setModelId);
     const activeConversation = useChatStore((state) =>
@@ -145,6 +145,7 @@ export function Chat() {
                 defaultWebSearchEnabled={initialWebSearchEnabledRef.current}
                 defaultThinkingEnabled={initialThinkingEnabledRef.current}
                 models={models}
+                providerId={providerId}
                 modelId={modelId}
                 onModelChange={setModelId}
                 modelsLoading={areModelsLoading}

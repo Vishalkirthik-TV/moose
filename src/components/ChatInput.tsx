@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fi';
 import { Textarea } from './ui/textarea';
 import { Select } from './ui/select';
-import type { ProviderModel } from '@/lib/providers';
+import type { ProviderId, ProviderModel } from '@/lib/providers';
 
 export interface ChatInputOptions {
     webSearchEnabled: boolean;
@@ -33,6 +33,7 @@ interface ChatInputProps {
     modelsLoading?: boolean;
     supportsThinking?: boolean;
     modelError?: string | null;
+    providerId?: ProviderId;
 }
 
 const attachmentActions = [
@@ -53,6 +54,7 @@ export function ChatInput({
     modelsLoading = false,
     supportsThinking,
     modelError,
+    providerId = 'zai',
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [webSearchEnabled, setWebSearchEnabled] = useState(defaultWebSearchEnabled);
@@ -217,9 +219,15 @@ export function ChatInput({
                         {models.length > 0 && onModelChange ? (
                             <Select
                                 value={modelId}
-                                options={models.map((model) => ({ value: model.id, label: model.name }))}
+                                options={models.map((model) => ({
+                                    value: model.id,
+                                    label: model.name,
+                                    badge: providerId === 'openrouter' ? (model.isFree ? 'Free' : 'Paid') : undefined,
+                                }))}
                                 onValueChange={onModelChange}
                                 aria-label="AI model"
+                                searchable={providerId === 'openrouter'}
+                                searchPlaceholder="Search OpenRouter models"
                                 className="w-[min(17rem,62vw)]"
                             />
                         ) : (

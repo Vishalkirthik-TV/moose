@@ -88,15 +88,27 @@ export async function fetchProviderModels(provider: ProviderId): Promise<Provide
 
     const models = data.flatMap((item): ProviderModel[] => {
         if (typeof item !== 'object' || item === null) return [];
-        const model = item as { id?: unknown; name?: unknown; supported_parameters?: unknown };
+        const model = item as {
+            id?: unknown;
+            name?: unknown;
+            supported_parameters?: unknown;
+            pricing?: { prompt?: unknown; completion?: unknown };
+        };
         if (typeof model.id !== 'string' || !model.id) return [];
         const parameters = Array.isArray(model.supported_parameters)
             ? model.supported_parameters.filter((parameter): parameter is string => typeof parameter === 'string')
             : [];
+        const promptPrice = model.pricing?.prompt;
+        const completionPrice = model.pricing?.completion;
+        const hasValidPricing = [promptPrice, completionPrice].every((price) =>
+            (typeof price === 'string' && price.trim() !== '' || typeof price === 'number')
+            && Number.isFinite(Number(price))
+        );
         return [{
             id: model.id,
             name: typeof model.name === 'string' && model.name ? model.name : model.id,
             supportsReasoning: parameters.includes('reasoning'),
+            isFree: hasValidPricing && Number(promptPrice) === 0 && Number(completionPrice) === 0,
         }];
     }).sort((left, right) => left.name.localeCompare(right.name));
 
