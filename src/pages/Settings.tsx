@@ -38,7 +38,7 @@ export function Settings() {
                         <div>
                             <h2 className="font-semibold">Manage providers</h2>
                             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                                Choose which configured provider Moose uses. API keys stay on the server and are never sent to your browser.
+                                Choose which configured provider Moose uses for local development.
                             </p>
                         </div>
                     </div>
@@ -66,12 +66,12 @@ export function Settings() {
                                     <p className="mt-1.5 text-sm leading-5 text-muted-foreground">{provider.description}</p>
                                     <p className="mt-3 text-xs font-medium text-muted-foreground">
                                         {isLoading
-                                            ? 'Checking server configuration…'
+                                            ? 'Loading provider models…'
                                             : error
                                                 ? 'Could not verify provider configuration'
                                             : configured
                                                 ? `Configured · ${provider.keyName}`
-                                                : `Add ${provider.keyName} to the server environment`}
+                                                : `Add ${provider.keyName} to .env`}
                                     </p>
                                 </button>
                             );
@@ -86,7 +86,7 @@ export function Settings() {
                         </p>
                     )}
                     <p className="mt-4 rounded-xl bg-muted/60 px-3.5 py-3 text-xs leading-5 text-muted-foreground">
-                        Configure <code className="font-medium text-foreground">VITE_ZAI_API_KEY</code>, <code className="font-medium text-foreground">VITE_OPENROUTER_API_KEY</code>, and <code className="font-medium text-foreground">VITE_SERPAPI_KEY</code> in the server-side <code className="font-medium text-foreground">.env</code> file, then restart the server.
+                        Configure provider keys in <code className="font-medium text-foreground">.env</code>, then restart Moose. This local-only setup exposes keys to the browser; do not deploy it or share the app with others.
                     </p>
                 </section>
 

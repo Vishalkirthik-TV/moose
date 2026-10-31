@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import { useChatStore } from '@/lib/store';
 import { requestChatAnswer, requestWebSearch } from '@/lib/api';
 import type { Message } from '@/lib/openai';
 
 export function useChat() {
-    const { getToken } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -64,14 +62,11 @@ export function useChat() {
         }
 
         try {
-            const token = await getToken();
-            if (!token) throw new Error('Your sign-in session is unavailable. Please sign in again.');
-
             let searchContext = '';
             let sources: Message['sources'] = [];
 
             if (webSearchEnabled) {
-                const searchResponse = await requestWebSearch(token, prompt);
+                const searchResponse = await requestWebSearch(prompt);
                 if (searchResponse.results.length === 0) {
                     throw new Error('Web search found no results. Try a different query or turn web search off.');
                 }
@@ -116,7 +111,7 @@ INSTRUCTIONS:
             hasAssistantPlaceholder = true;
 
             // Call API
-            const response = await requestChatAnswer(token, allMessages, providerId, modelId, thinkingEnabled);
+            const response = await requestChatAnswer(allMessages, providerId, modelId, thinkingEnabled);
             if (!response.trim()) {
                 throw new Error('The AI service returned an empty answer. Please try again.');
             }
@@ -136,7 +131,6 @@ INSTRUCTIONS:
         activeConversation,
         activeConversationId,
         addMessage,
-        getToken,
         isLoading,
         modelId,
         providerId,
