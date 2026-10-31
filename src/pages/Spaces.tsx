@@ -3,6 +3,7 @@ import { FiFolder, FiMessageSquare, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { AppDialog } from '@/components/AppDialog';
 import { WorkspaceLayout } from '@/components/WorkspaceLayout';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 import { useChatStore } from '@/lib/store';
 
 export function Spaces() {
@@ -19,9 +20,8 @@ export function Spaces() {
     };
 
     return (
-        <WorkspaceLayout>
-            <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                <main className="mx-auto w-full max-w-4xl px-5 py-10 sm:px-8 sm:py-14">
+        <WorkspaceLayout scrollable>
+                <div className="mx-auto w-full max-w-4xl px-5 py-10 sm:px-8 sm:py-14">
                     <p className="text-sm font-medium text-primary">Your library</p>
                     <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Spaces</h1>
                     <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
@@ -114,22 +114,23 @@ export function Spaces() {
                                             <span className="truncate text-sm font-medium">{conversation.title}</span>
                                         </div>
                                         <label className="sr-only" htmlFor={`space-for-${conversation.id}`}>Space for {conversation.title}</label>
-                                        <select
+                                        <Select
                                             id={`space-for-${conversation.id}`}
                                             value={conversation.spaceId ?? ''}
-                                            onChange={(event) => assignConversationToSpace(conversation.id, event.target.value || null)}
-                                            className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm sm:w-52"
-                                        >
-                                            <option value="">Unorganized</option>
-                                            {spaces.map((space) => <option key={space.id} value={space.id}>{space.name}</option>)}
-                                        </select>
+                                            aria-label={`Space for ${conversation.title}`}
+                                            onValueChange={(spaceId) => assignConversationToSpace(conversation.id, spaceId || null)}
+                                            className="sm:w-52"
+                                            options={[
+                                                { value: '', label: 'Unorganized' },
+                                                ...spaces.map((space) => ({ value: space.id, label: space.name })),
+                                            ]}
+                                        />
                                     </div>
                                 ))}
                             </div>
                         )}
                     </section>
-                </main>
-            </div>
+                </div>
 
             <AppDialog
                 title="Delete this space?"

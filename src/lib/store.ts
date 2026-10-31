@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Message } from './openai';
+import { DEFAULT_MODELS, type ProviderId } from './providers';
 
 export interface Conversation {
     id: string;
@@ -21,6 +22,8 @@ interface ChatStore {
     conversations: Conversation[];
     spaces: ChatSpace[];
     activeConversationId: string | null;
+    providerId: ProviderId;
+    modelId: string;
 
     // Actions
     createConversation: () => string;
@@ -29,6 +32,8 @@ interface ChatStore {
     assignConversationToSpace: (conversationId: string, spaceId: string | null) => void;
     deleteConversation: (id: string) => void;
     setActiveConversation: (id: string) => void;
+    setProviderId: (providerId: ProviderId) => void;
+    setModelId: (modelId: string) => void;
     addMessage: (conversationId: string, message: Message) => void;
     updateLastMessage: (conversationId: string, updates: string | Partial<Message>) => void;
     updateConversationTitle: (conversationId: string, title: string) => void;
@@ -41,6 +46,8 @@ export const useChatStore = create<ChatStore>()(
             conversations: [],
             spaces: [],
             activeConversationId: null,
+            providerId: 'zai',
+            modelId: DEFAULT_MODELS.zai,
 
             createConversation: () => {
                 const id = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -105,13 +112,22 @@ export const useChatStore = create<ChatStore>()(
                 set({ activeConversationId: id });
             },
 
+            setProviderId: (providerId) => {
+                set({ providerId, modelId: DEFAULT_MODELS[providerId] });
+            },
+
+            setModelId: (modelId) => {
+                set({ modelId });
+            },
+
             addMessage: (conversationId, message) => {
+                const messageWithTimestamp = { ...message, sentAt: message.sentAt ?? Date.now() };
                 set((state) => ({
                     conversations: state.conversations.map((conv) =>
                         conv.id === conversationId
                             ? {
                                 ...conv,
-                                messages: [...conv.messages, message],
+                                messages: [...conv.messages, messageWithTimestamp],
                                 updatedAt: Date.now(),
                             }
                             : conv
@@ -154,11 +170,14 @@ export const useChatStore = create<ChatStore>()(
         }),
         {
             name: 'chat-storage',
-            version: 2,
+            version: 3,
             migrate: (persistedState) => {
                 const state = persistedState as Partial<ChatStore> | undefined;
+                const providerId = state?.providerId === 'openrouter' ? 'openrouter' : 'zai';
                 return {
                     ...state,
+                    providerId,
+                    modelId: state?.modelId ?? DEFAULT_MODELS[providerId],
                     spaces: state?.spaces ?? [],
                     conversations: (state?.conversations ?? []).map((conversation) => ({
                         ...conversation,

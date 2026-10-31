@@ -4,6 +4,7 @@ import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { AppDialog } from '@/components/AppDialog';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 import { Footer } from '@/components/Footer';
 import { useChatStore, type Conversation } from '@/lib/store';
 
@@ -36,14 +37,37 @@ function safeExternalUrl(value: string) {
     }
 }
 
-export function WorkspaceLayout({ children }: { children: ReactNode }) {
+interface WorkspaceLayoutProps {
+    children: ReactNode;
+    headerActions?: ReactNode;
+    scrollable?: boolean;
+}
+
+export function WorkspaceLayout({ children, headerActions, scrollable = false }: WorkspaceLayoutProps) {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
     const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
-    const activeConversation = useChatStore((state) =>
-        state.conversations.find((conversation) => conversation.id === state.activeConversationId) ?? null
+    const conversations = useChatStore((state) => state.conversations);
+    const activeConversationId = useChatStore((state) => state.activeConversationId);
+    const [selectedExportConversationId, setSelectedExportConversationId] = useState('');
+    const exportableConversations = conversations.filter((conversation) =>
+        conversation.messages.some((message) => message.role !== 'system')
     );
+    const selectedConversation = exportableConversations.find(
+        (conversation) => conversation.id === selectedExportConversationId
+    ) ?? null;
+    const currentPath = window.location.hash.split('?')[0];
+    const title = currentPath === '#/chat'
+        ? conversations.find((conversation) => conversation.id === activeConversationId)?.title ?? 'New chat'
+        : currentPath === '#/discover'
+            ? 'Discover'
+            : currentPath === '#/spaces'
+                ? 'Spaces'
+                : currentPath === '#/settings'
+                    ? 'Settings'
+                    : 'Workspace';
+    const subtitle = currentPath === '#/chat' ? 'A thoughtful space for your questions' : 'Your Moose workspace';
 
     const closeExportDialog = () => {
         setIsExportDialogOpen(false);
@@ -51,13 +75,13 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     };
 
     const exportText = () => {
-        if (!activeConversation) return;
+        if (!selectedConversation) return;
 
-        const file = new Blob([conversationAsText(activeConversation)], { type: 'text/plain;charset=utf-8' });
+        const file = new Blob([conversationAsText(selectedConversation)], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(file);
         const link = document.createElement('a');
         link.href = url;
-        const safeTitle = activeConversation.title
+        const safeTitle = selectedConversation.title
             .replace(/[<>:"/\\|?*]/g, '-')
             .split('')
             .filter((character) => character.charCodeAt(0) >= 32)
@@ -70,7 +94,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     };
 
     const exportPdf = () => {
-        if (!activeConversation) return;
+        if (!selectedConversation) return;
 
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
@@ -78,7 +102,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             return;
         }
 
-        const messages = activeConversation.messages
+        const messages = selectedConversation.messages
             .filter((message) => message.role !== 'system')
             .map((message) => `
                 <article class="${message.role}">
@@ -92,7 +116,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             `).join('');
 
         printWindow.document.write(`<!doctype html>
-            <html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(activeConversation.title)} — Moose</title>
+            <html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(selectedConversation.title)} — Moose</title>
             <style>
                 body{font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#202722;max-width:760px;margin:48px auto;padding:0 28px}
                 header{border-bottom:1px solid #dfe5df;padding-bottom:18px;margin-bottom:28px}
@@ -102,7 +126,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
                 .sources{font-size:12px;color:#68736b}.sources a{color:#356b50}
                 @media print{body{margin:0 auto;padding:0 10px}a{color:inherit}}
             </style></head><body>
-            <header><h1>${escapeHtml(activeConversation.title)}</h1><p>Exported from Moose</p></header>
+            <header><h1>${escapeHtml(selectedConversation.title)}</h1><p>Exported from Moose</p></header>
             ${messages}
             <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),150));</script>
             </body></html>`);
@@ -111,7 +135,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     };
 
     return (
-        <div className="flex h-dvh overflow-hidden bg-background pb-[env(safe-area-inset-bottom)]">
+        <div className="fixed inset-0 flex overflow-hidden overscroll-none bg-background pb-[env(safe-area-inset-bottom)]">
             <Sidebar
                 isMobileOpen={isMobileSidebarOpen}
                 isDesktopCollapsed={isDesktopSidebarCollapsed}
@@ -119,47 +143,80 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
                 onDesktopToggle={() => setIsDesktopSidebarCollapsed((collapsed) => !collapsed)}
                 onDownload={() => {
                     setExportError(null);
+                    const preferredConversation = exportableConversations.find(
+                        (conversation) => conversation.id === activeConversationId
+                    ) ?? exportableConversations[0];
+                    setSelectedExportConversationId(preferredConversation?.id ?? '');
                     setIsExportDialogOpen(true);
                 }}
             />
-            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 <Header
                     onMenuClick={() => setIsMobileSidebarOpen(true)}
                     onDesktopToggle={() => setIsDesktopSidebarCollapsed((collapsed) => !collapsed)}
                     isDesktopSidebarCollapsed={isDesktopSidebarCollapsed}
+                    title={title}
+                    subtitle={subtitle}
+                    actions={headerActions}
+                    variant={scrollable ? 'breadcrumb' : 'chat'}
                 />
-                <main className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</main>
-                <Footer />
+                <main className={scrollable
+                    ? 'min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain'
+                    : 'flex min-h-0 flex-1 flex-col overflow-hidden'
+                }>
+                    {children}
+                </main>
+                <div className="shrink-0">
+                    <Footer />
+                </div>
             </div>
 
             <AppDialog
                 title="Export conversation"
-                description={activeConversation?.title ?? 'Choose a format to save this conversation.'}
+                description="Choose a saved chat and a format to export it."
                 open={isExportDialogOpen}
                 onClose={closeExportDialog}
             >
-                {activeConversation?.messages.some((message) => message.role !== 'system') ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                        <Button
-                            onClick={exportPdf}
-                            variant="outline"
-                            className="h-auto min-h-28 flex-col items-start justify-between gap-5 rounded-2xl p-4 text-left whitespace-normal"
-                        >
-                            <FiPrinter aria-hidden="true" className="h-5 w-5 text-primary" />
-                            <span><span className="block font-semibold">Save as PDF</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Open the print dialog and choose Save as PDF.</span></span>
-                        </Button>
-                        <Button
-                            onClick={exportText}
-                            variant="outline"
-                            className="h-auto min-h-28 flex-col items-start justify-between gap-5 rounded-2xl p-4 text-left whitespace-normal"
-                        >
-                            <FiFileText aria-hidden="true" className="h-5 w-5 text-primary" />
-                            <span><span className="block font-semibold">Download text</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Save the conversation as a plain-text file.</span></span>
-                        </Button>
+                {exportableConversations.length > 0 ? (
+                    <div className="space-y-4">
+                        <label htmlFor="export-conversation" className="block text-sm font-medium text-foreground">
+                            Chat to export
+                        </label>
+                        <Select
+                            id="export-conversation"
+                            value={selectedExportConversationId}
+                            aria-label="Chat to export"
+                            onValueChange={(conversationId) => {
+                                setSelectedExportConversationId(conversationId);
+                                setExportError(null);
+                            }}
+                            options={exportableConversations.map((conversation) => ({
+                                value: conversation.id,
+                                label: conversation.title,
+                            }))}
+                        />
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <Button
+                                onClick={exportPdf}
+                                variant="outline"
+                                className="h-auto min-h-28 flex-col items-start justify-between gap-5 rounded-2xl p-4 text-left whitespace-normal"
+                            >
+                                <FiPrinter aria-hidden="true" className="h-5 w-5 text-primary" />
+                                <span><span className="block font-semibold">Save as PDF</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Open the print dialog and choose Save as PDF.</span></span>
+                            </Button>
+                            <Button
+                                onClick={exportText}
+                                variant="outline"
+                                className="h-auto min-h-28 flex-col items-start justify-between gap-5 rounded-2xl p-4 text-left whitespace-normal"
+                            >
+                                <FiFileText aria-hidden="true" className="h-5 w-5 text-primary" />
+                                <span><span className="block font-semibold">Download text</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Save the conversation as a plain-text file.</span></span>
+                            </Button>
+                        </div>
                     </div>
                 ) : (
-                    <p className="rounded-2xl bg-muted/70 p-4 text-sm text-muted-foreground">
-                        Start a conversation before exporting it.
+                    <p className="rounded-2xl bg-muted/70 p-4 text-sm leading-6 text-muted-foreground">
+                        There are no saved chats with messages to export yet. Start a conversation and it will appear here.
                     </p>
                 )}
                 {exportError && <p className="mt-4 text-sm text-destructive" role="alert">{exportError}</p>}

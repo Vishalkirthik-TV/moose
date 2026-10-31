@@ -22,6 +22,15 @@ export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
     const isSystem = message.role === 'system';
     const [copied, setCopied] = useState(false);
     const { theme } = useTheme();
+    const sentAtLabel = message.sentAt
+        ? (() => {
+            const sentAt = new Date(message.sentAt);
+            const today = new Date();
+            const isToday = sentAt.toDateString() === today.toDateString();
+            const time = sentAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+            return `${isToday ? 'Today' : sentAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} ${time}`;
+        })()
+        : null;
 
     if (isSystem) return null;
 
@@ -54,10 +63,29 @@ export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
         return (
             <div className="w-full px-4 pb-2 pt-6 md:px-0">
                 <div className="mx-auto flex max-w-3xl justify-end">
-                    <div className="max-w-[88%] rounded-3xl rounded-br-lg border border-primary/10 bg-primary px-4 py-3 text-primary-foreground shadow-sm sm:max-w-[80%]">
-                        <p className="text-sm leading-6 md:text-base">
-                            {message.content}
-                        </p>
+                    <div className="flex max-w-[88%] flex-col items-start sm:max-w-[80%]">
+                        {sentAtLabel && message.sentAt && (
+                            <time
+                                dateTime={new Date(message.sentAt).toISOString()}
+                                className="mb-2 ml-1 text-xs font-medium text-muted-foreground"
+                            >
+                                {sentAtLabel}
+                            </time>
+                        )}
+                        {message.attachments && message.attachments.length > 0 && (
+                            <ul className="mb-2 flex flex-wrap gap-1.5">
+                                {message.attachments.map((fileName, index) => (
+                                    <li key={`${fileName}-${index}`} className="max-w-full truncate rounded-full border border-border/50 bg-card/80 px-2.5 py-1 text-xs text-muted-foreground">
+                                        {fileName}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        <div className="rounded-3xl rounded-br-lg border border-primary/10 bg-primary px-4 py-3 text-primary-foreground shadow-sm">
+                            <p className="text-sm leading-6 md:text-base">
+                                {message.content}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -17,7 +17,7 @@ export function ChatList({ messages, messagesEndRef, onSend, error }: ChatListPr
                         What do you want to know?
                     </h1>
                     <p className="text-base leading-7 text-muted-foreground">
-                        Search the web with AI-powered answers
+                        Ask Moose anything. Turn on web search when you need current sources.
                     </p>
                 </div>
             </div>
