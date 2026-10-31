@@ -52,10 +52,10 @@ export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
     // User message: Display as right-aligned bubble
     if (isUser) {
         return (
-            <div className="w-full pt-6 pb-2 px-4 md:px-0">
-                <div className="max-w-3xl mx-auto flex justify-end">
-                    <div className="max-w-[80%] bg-primary text-primary-foreground px-4 py-3 rounded-2xl rounded-br-md shadow-sm">
-                        <p className="text-sm md:text-base leading-relaxed">
+            <div className="w-full px-4 pb-2 pt-6 md:px-0">
+                <div className="mx-auto flex max-w-3xl justify-end">
+                    <div className="max-w-[88%] rounded-3xl rounded-br-lg border border-primary/10 bg-primary px-4 py-3 text-primary-foreground shadow-sm sm:max-w-[80%]">
+                        <p className="text-sm leading-6 md:text-base">
                             {message.content}
                         </p>
                     </div>
@@ -66,8 +66,8 @@ export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
 
     // Assistant message: Structured answer with sources
     return (
-        <div className="w-full px-4 md:px-0 pb-8">
-            <div className="max-w-3xl mx-auto">
+        <div className="w-full px-4 pb-8 md:px-0">
+            <div className="mx-auto max-w-3xl">
                 {/* Sources Section */}
                 {message.sources && message.sources.length > 0 && (
                     <SourceCarousel sources={message.sources} />
@@ -75,9 +75,12 @@ export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
 
                 {/* Answer Section - Clean, flat, no bubbles */}
                 <div className="mt-6">
-                    <div className="flex items-center gap-2 mb-4">
-                        <MooseLogo size="md" />
-                        <span className="text-sm font-medium text-muted-foreground">Answer</span>
+                    <div className="mb-4 flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-border/70 bg-card">
+                            <MooseLogo size="sm" />
+                        </div>
+                        <span className="text-sm font-semibold tracking-[-0.01em] text-foreground">Moose</span>
+                        <span className="text-xs text-muted-foreground">Answer</span>
                     </div>
 
                     {message.content ? (
@@ -107,12 +110,14 @@ export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
                                         strong: ({ children }) => (
                                             <strong className="font-semibold text-foreground">{children}</strong>
                                         ),
-                                        code: ({ node, inline, className, children, ...props }: any) => {
+                                        code: ({ node, className, children, ...props }) => {
+                                            void node;
                                             const match = /language-(\w+)/.exec(className || '');
                                             const language = match ? match[1] : 'text';
                                             const codeString = String(children).replace(/\n$/, '');
+                                            const isInline = !className?.startsWith('language-') && !String(children).endsWith('\n');
 
-                                            if (inline) {
+                                            if (isInline) {
                                                 return (
                                                     <code
                                                         className="px-1.5 py-0.5 rounded-md bg-muted/60 font-mono text-sm text-primary"
@@ -171,17 +176,17 @@ export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex items-center gap-2 mt-6 pt-4 border-t border-border/30">
+                            <div className="mt-6 flex items-center gap-2 border-t border-border/50 pt-4">
                                 <button
                                     onClick={handleCopy}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/30 hover:bg-muted rounded-lg transition-colors"
+                                    className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-[0.98]"
                                 >
                                     {copied ? <FiCheck className="w-3.5 h-3.5 text-green-500" /> : <FiCopy className="w-3.5 h-3.5" />}
                                     <span>{copied ? 'Copied' : 'Copy'}</span>
                                 </button>
                                 <button
                                     onClick={handleShare}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/30 hover:bg-muted rounded-lg transition-colors"
+                                    className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-[0.98]"
                                 >
                                     <FiShare2 className="w-3.5 h-3.5" />
                                     <span>Share</span>

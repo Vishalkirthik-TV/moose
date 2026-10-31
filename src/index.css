@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -46,72 +46,117 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: #FCFCF9;
-  --foreground: #1C1C19;
-  --card: #F9F9F6;
-  --card-foreground: #1C1C19;
-  --popover: #F9F9F6;
-  --popover-foreground: #1C1C19;
-  --primary: #20808D;
-  --primary-foreground: #FCFCF9;
-  --secondary: #F4F4F1;
-  --secondary-foreground: #1C1C19;
-  --muted: #F4F4F1;
-  --muted-foreground: #6B6B67;
-  --accent: #F4F4F1;
-  --accent-foreground: #1C1C19;
-  --destructive: #FF6B6B;
-  --border: #CECECA;
-  --input: #CECECA;
-  --ring: #20808D;
+  color-scheme: light;
+  --radius: 0.875rem;
+  --background: #f7f8f6;
+  --foreground: #202722;
+  --card: #ffffff;
+  --card-foreground: #202722;
+  --popover: #ffffff;
+  --popover-foreground: #202722;
+  --primary: #356b50;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1ed;
+  --secondary-foreground: #202722;
+  --muted: #eef1ed;
+  --muted-foreground: #68736b;
+  --accent: #e9eee9;
+  --accent-foreground: #202722;
+  --destructive: #c74646;
+  --border: #dfe5df;
+  --input: #dfe5df;
+  --ring: #6f9c7d;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: #FCFCF9;
-  --sidebar-foreground: #1C1C19;
-  --sidebar-primary: #20808D;
-  --sidebar-primary-foreground: #FCFCF9;
-  --sidebar-accent: #F4F4F1;
-  --sidebar-accent-foreground: #1C1C19;
-  --sidebar-border: #CECECA;
-  --sidebar-ring: #20808D;
+  --sidebar: #f2f5f1;
+  --sidebar-foreground: #202722;
+  --sidebar-primary: #356b50;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8eee8;
+  --sidebar-accent-foreground: #202722;
+  --sidebar-border: #dfe5df;
+  --sidebar-ring: #6f9c7d;
+  --scrollbar-thumb: rgba(67, 83, 72, 0.22);
+  --scrollbar-thumb-hover: rgba(67, 83, 72, 0.4);
 }
 
 .dark {
-  --background: #191A1A;
-  --foreground: #E8E8E8;
-  --card: #2A2A2A;
-  --card-foreground: #E8E8E8;
-  --popover: #2A2A2A;
-  --popover-foreground: #E8E8E8;
-  --primary: #20808D;
-  --primary-foreground: #FCFCF9;
-  --secondary: #2A2A2A;
-  --secondary-foreground: #E8E8E8;
-  --muted: #2A2A2A;
-  --muted-foreground: #6B6B67;
-  --accent: #2A2A2A;
-  --accent-foreground: #E8E8E8;
-  --destructive: #FF6B6B;
-  --border: #454545;
-  --input: #454545;
-  --ring: #20808D;
+  color-scheme: dark;
+  --background: #121714;
+  --foreground: #edf2ed;
+  --card: #1a211c;
+  --card-foreground: #edf2ed;
+  --popover: #1a211c;
+  --popover-foreground: #edf2ed;
+  --primary: #82b493;
+  --primary-foreground: #102015;
+  --secondary: #202923;
+  --secondary-foreground: #edf2ed;
+  --muted: #202923;
+  --muted-foreground: #a0ada2;
+  --accent: #28332b;
+  --accent-foreground: #edf2ed;
+  --destructive: #f17d78;
+  --border: #303b33;
+  --input: #303b33;
+  --ring: #82b493;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: #191A1A;
-  --sidebar-foreground: #E8E8E8;
-  --sidebar-primary: #20808D;
-  --sidebar-primary-foreground: #FCFCF9;
-  --sidebar-accent: #2A2A2A;
-  --sidebar-accent-foreground: #E8E8E8;
-  --sidebar-border: #454545;
-  --sidebar-ring: #20808D;
+  --sidebar: #171e19;
+  --sidebar-foreground: #edf2ed;
+  --sidebar-primary: #82b493;
+  --sidebar-primary-foreground: #102015;
+  --sidebar-accent: #253027;
+  --sidebar-accent-foreground: #edf2ed;
+  --sidebar-border: #303b33;
+  --sidebar-ring: #82b493;
+  --scrollbar-thumb: rgba(190, 207, 192, 0.2);
+  --scrollbar-thumb-hover: rgba(190, 207, 192, 0.36);
+}
+
+html {
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: var(--scrollbar-thumb);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 @layer base {
@@ -119,8 +164,30 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-optical-sizing: auto;
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
+    min-width: 320px;
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+}
+
+.welcome-glow {
+  background: radial-gradient(ellipse at top, color-mix(in srgb, var(--primary) 8%, transparent), transparent 68%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

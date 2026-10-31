@@ -15,10 +15,10 @@ export function MooseLogo({ size = 'md', className, showText = false }: MooseLog
     };
 
     const textSizes = {
-        sm: 'text-base',
-        md: 'text-lg',
-        lg: 'text-xl',
-        xl: 'text-2xl',
+        sm: 'text-sm',
+        md: 'text-base',
+        lg: 'text-lg',
+        xl: 'text-xl',
     };
 
     return (

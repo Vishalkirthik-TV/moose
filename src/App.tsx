@@ -4,7 +4,19 @@ import { ThemeProvider } from './components/theme-provider';
 import { Chat } from './pages/Chat';
 import { Auth } from './pages/Auth';
 import { Welcome } from './pages/Welcome';
-import { NotImplemented } from './pages/NotImplemented';
+import { Discover } from './pages/Discover';
+import { Spaces } from './pages/Spaces';
+import { Settings } from './pages/Settings';
+import { NotFound } from './pages/NotFound';
+
+function SignedInRoutes({ currentPath }: { currentPath: string }) {
+  if (currentPath === '#/chat' || currentPath.startsWith('#/chat?')) return <Chat />;
+  if (currentPath === '#/discover') return <Discover />;
+  if (currentPath === '#/spaces') return <Spaces />;
+  if (currentPath === '#/settings') return <Settings />;
+  if (currentPath === '' || currentPath === '#' || currentPath === '#/' || currentPath === '#/welcome') return <Welcome />;
+  return <NotFound />;
+}
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.hash);
@@ -26,34 +38,9 @@ function App() {
     }
   }, [isSignedIn, currentPath]);
 
-  // Handle routes
-  if (currentPath === '#/not-implemented') {
-    return (
-      <ThemeProvider>
-        <NotImplemented />
-      </ThemeProvider>
-    );
-  }
-
-  if (currentPath === '#/chat') {
-    return (
-      <ThemeProvider>
-        <SignedIn>
-          <Chat />
-        </SignedIn>
-        <SignedOut>
-          <Auth />
-        </SignedOut>
-      </ThemeProvider>
-    );
-  }
-
-  // Default to welcome page for signed-in users
   return (
     <ThemeProvider>
-      <SignedIn>
-        <Welcome />
-      </SignedIn>
+      <SignedIn><SignedInRoutes currentPath={currentPath} /></SignedIn>
       <SignedOut>
         <Auth />
       </SignedOut>

@@ -16,6 +16,10 @@
 - Web search results and AI-generated answers with source links.
 - Markdown and syntax-highlighted code rendering.
 - Conversation history persisted in local storage.
+- Organize conversations into named spaces and confirm before deleting chats.
+- Export conversations as printable PDFs or plain-text files.
+- Browse official AI model news and research links.
+- Account profile, security, and appearance settings.
 - Sign-in and session management with Clerk.
 - Responsive interface with light and dark themes.
 

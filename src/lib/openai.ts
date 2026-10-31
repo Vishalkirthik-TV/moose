@@ -23,15 +23,28 @@ const client = new OpenAI({
 });
 
 export async function sendChatMessage(messages: Message[]): Promise<string> {
-    try {
-        const completion = await client.chat.completions.create({
-            model: 'glm-4.7-flash',
-            messages: messages as OpenAI.Chat.ChatCompletionMessageParam[],
-        });
+    for (let attempt = 0; ; attempt += 1) {
+        try {
+            const completion = await client.chat.completions.create({
+                model: 'glm-4.7-flash',
+                messages: messages as OpenAI.Chat.ChatCompletionMessageParam[],
+            });
 
-        return completion.choices[0]?.message?.content || '';
-    } catch (error) {
-        console.error('Chat API Error:', error);
-        throw error;
+            return completion.choices[0]?.message?.content || '';
+        } catch (error) {
+            const isTemporaryFailure = error instanceof OpenAI.APIError
+                && (error.code === '1305' || error.status >= 500);
+
+            if (isTemporaryFailure && attempt < 2) {
+                await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+                continue;
+            }
+
+            console.error('Chat API Error:', error);
+            if (error instanceof OpenAI.APIError && error.code === '1305') {
+                throw new Error('The AI service is temporarily busy. Please try again in a moment.');
+            }
+            throw error;
+        }
     }
 }

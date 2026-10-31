@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
-import { Header } from '@/components/Header';
-import { Sidebar } from '@/components/Sidebar';
+import { useEffect, useRef } from 'react';
 import { ChatList } from '@/components/ChatList';
 import { ChatInput } from '@/components/ChatInput';
 import { useChat } from '@/hooks/useChat';
 import { useChatStore } from '@/lib/store';
-import { Footer } from '@/components/Footer';
+import { WorkspaceLayout } from '@/components/WorkspaceLayout';
 
 export function Chat() {
-    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-    const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
-    const { messages, isLoading, sendMessage, messagesEndRef } = useChat();
+    const { messages, isLoading, error, sendMessage, messagesEndRef } = useChat();
     const { activeConversationId, createConversation } = useChatStore();
+    const initialPromptRef = useRef(
+        new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('prompt')
+    );
+    const submittedInitialPromptRef = useRef(false);
 
     // Create initial conversation if none exists
     useEffect(() => {
@@ -20,33 +20,23 @@ export function Chat() {
         }
     }, [activeConversationId, createConversation]);
 
-    const toggleDesktopSidebar = () => {
-        setIsDesktopSidebarCollapsed(!isDesktopSidebarCollapsed);
-    };
+    useEffect(() => {
+        const prompt = initialPromptRef.current;
+        if (!prompt || !activeConversationId || submittedInitialPromptRef.current) return;
+
+        submittedInitialPromptRef.current = true;
+        window.history.replaceState(
+            window.history.state,
+            '',
+            `${window.location.pathname}${window.location.search}#/chat`
+        );
+        void sendMessage(prompt);
+    }, [activeConversationId, sendMessage]);
 
     return (
-        <div className="flex h-screen overflow-hidden bg-background">
-            {/* Sidebar */}
-            <Sidebar
-                isMobileOpen={isMobileSidebarOpen}
-                isDesktopCollapsed={isDesktopSidebarCollapsed}
-                onMobileClose={() => setIsMobileSidebarOpen(false)}
-                onDesktopToggle={toggleDesktopSidebar}
-            />
-
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <Header
-                    onMenuClick={() => setIsMobileSidebarOpen(true)}
-                    onDesktopToggle={toggleDesktopSidebar}
-                    isDesktopSidebarCollapsed={isDesktopSidebarCollapsed}
-                />
-
-                <ChatList messages={messages} messagesEndRef={messagesEndRef} onSend={sendMessage} />
-
-                <ChatInput onSend={sendMessage} disabled={isLoading} />
-                <Footer />
-            </div>
-        </div>
+        <WorkspaceLayout>
+            <ChatList messages={messages} messagesEndRef={messagesEndRef} onSend={sendMessage} error={error} />
+            <ChatInput onSend={sendMessage} disabled={isLoading} />
+        </WorkspaceLayout>
     );
 }

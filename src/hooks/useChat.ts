@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useChatStore } from '@/lib/store';
 import { sendChatMessage, type Message } from '@/lib/openai';
 import { searchWeb } from '@/lib/search';
@@ -18,37 +18,43 @@ export function useChat() {
 
     const activeConversation = getActiveConversation();
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
+    const scrollToBottom = useCallback(() => {
+        const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 'auto'
+            : 'smooth';
+        messagesEndRef.current?.scrollIntoView({ behavior });
+    }, []);
 
     useEffect(() => {
         scrollToBottom();
-    }, [activeConversation?.messages]);
+    }, [activeConversation?.messages, scrollToBottom]);
 
-    const sendMessage = async (content: string) => {
-        if (!content.trim() || !activeConversationId || isLoading) return;
+    const sendMessage = useCallback(async (content: string) => {
+        const prompt = content.trim();
+        const conversationId = activeConversationId;
+        if (!prompt || !conversationId || isLoading) return;
 
         setError(null);
         setIsLoading(true);
+        let hasAssistantPlaceholder = false;
 
         // Add user message
-        const userMessage: Message = { role: 'user', content: content.trim() };
-        addMessage(activeConversationId, userMessage);
+        const userMessage: Message = { role: 'user', content: prompt };
+        addMessage(conversationId, userMessage);
 
         // Update conversation title if it's the first message
         if (activeConversation?.messages.length === 0) {
-            const title = content.trim().slice(0, 50) + (content.length > 50 ? '...' : '');
-            updateConversationTitle(activeConversationId, title);
+            const title = prompt.slice(0, 50) + (prompt.length > 50 ? '...' : '');
+            updateConversationTitle(conversationId, title);
         }
 
         try {
             // 1. Perform Search
             let searchContext = '';
-            let sources: any[] = [];
+            let sources: Message['sources'] = [];
 
             try {
-                const searchResponse = await searchWeb(content.trim());
+                const searchResponse = await searchWeb(prompt);
                 if (searchResponse.results.length > 0) {
                     sources = searchResponse.results;
                     searchContext = `
@@ -90,25 +96,34 @@ INSTRUCTIONS:
                 content: '',
                 sources: sources.length > 0 ? sources : undefined
             };
-            addMessage(activeConversationId, assistantMessage);
+            addMessage(conversationId, assistantMessage);
+            hasAssistantPlaceholder = true;
 
             // Call API
             const response = await sendChatMessage(allMessages);
+            if (!response.trim()) {
+                throw new Error('The AI service returned an empty answer. Please try again.');
+            }
 
-            // Update assistant message with final response and existing sources
-            // useChatStore needs to support updating the whole message or we rely on the object reference if it was shallow, 
-            // but updateLastMessage only takes content string usually. We might need to update the store logic or just overwrite content.
-            // Wait, updateLastMessage signature maps to store implementation. Let's check store.ts if we need to change it.
-            // For now, assuming updateLastMessage updates the content, we need to ensure sources are preserved or passed.
-            // Let's modify updateLastMessage to accept partial text updates, OR we just trust that we added the message with sources above.
-            updateLastMessage(activeConversationId, response);
+            updateLastMessage(conversationId, response);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to send message');
+            const message = err instanceof Error ? err.message : 'Failed to send message';
+            setError(message);
+            if (hasAssistantPlaceholder) {
+                updateLastMessage(conversationId, 'I couldn’t generate an answer. Please try again.');
+            }
             console.error('Error sending message:', err);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [
+        activeConversation,
+        activeConversationId,
+        addMessage,
+        isLoading,
+        updateConversationTitle,
+        updateLastMessage,
+    ]);
 
     return {
         messages: activeConversation?.messages || [],

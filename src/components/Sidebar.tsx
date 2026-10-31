@@ -1,37 +1,42 @@
+import { useState } from 'react';
 import {
     FiPlus,
     FiMessageSquare,
     FiTrash2,
     FiHome,
     FiCompass,
-    FiBookOpen,
     FiChevronsLeft,
     FiChevronsRight,
     FiLayers,
     FiSettings,
-    FiSmartphone,
+    FiDownload,
 } from 'react-icons/fi';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { useChatStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { MooseLogo } from './MooseLogo';
+import { AppDialog } from './AppDialog';
 
 interface SidebarProps {
     isMobileOpen?: boolean;
     isDesktopCollapsed?: boolean;
     onMobileClose?: () => void;
     onDesktopToggle?: () => void;
+    onDownload?: () => void;
 }
 
 export function Sidebar({
     isMobileOpen = false,
     isDesktopCollapsed = false,
     onMobileClose,
-    onDesktopToggle
+    onDesktopToggle,
+    onDownload,
 }: SidebarProps) {
+    const [conversationToDelete, setConversationToDelete] = useState<{ id: string; title: string } | null>(null);
     const {
         conversations,
+        spaces,
         activeConversationId,
         createConversation,
         setActiveConversation,
@@ -40,21 +45,28 @@ export function Sidebar({
 
     const handleNewChat = () => {
         createConversation();
-        onMobileClose?.();
+        handleNavigation('#/chat');
     };
 
     const handleSelectConversation = (id: string) => {
         setActiveConversation(id);
-        onMobileClose?.();
+        handleNavigation('#/chat');
     };
 
     const handleDeleteConversation = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        deleteConversation(id);
+        const conversation = conversations.find((item) => item.id === id);
+        if (conversation) setConversationToDelete({ id, title: conversation.title });
+    };
+
+    const confirmDeleteConversation = () => {
+        if (!conversationToDelete) return;
+        deleteConversation(conversationToDelete.id);
+        setConversationToDelete(null);
     };
 
     const handleNavigation = (hash: string) => {
-        window.location.hash = hash;
+        window.location.assign(hash);
         onMobileClose?.();
     };
 
@@ -71,7 +83,7 @@ export function Sidebar({
             {/* Sidebar */}
             <aside
                 className={cn(
-                    'fixed md:relative inset-y-0 left-0 z-50 bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 ease-in-out',
+                    'fixed md:relative inset-y-0 left-0 z-50 flex flex-col border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl transition-all duration-300 ease-in-out',
                     isMobileOpen ? 'translate-x-0' : '-translate-x-full',
                     'md:translate-x-0',
                     isDesktopCollapsed ? 'md:w-16' : 'md:w-60',
@@ -79,7 +91,7 @@ export function Sidebar({
                 )}
             >
                 {/* Logo & Collapse Toggle */}
-                <div className="p-3 border-b border-sidebar-border flex items-center justify-between flex-shrink-0">
+                <div className="flex flex-shrink-0 items-center justify-between border-b border-sidebar-border px-3 py-3.5">
                     <div className={cn(
                         "transition-opacity duration-200",
                         isDesktopCollapsed ? "md:opacity-0 md:w-0 overflow-hidden" : "md:opacity-100"
@@ -88,7 +100,7 @@ export function Sidebar({
                     </div>
                     <Button
                         onClick={onDesktopToggle}
-                        className="hidden md:flex h-8 w-8 text-black dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                        className="hidden h-8 w-8 text-muted-foreground hover:text-foreground md:flex"
                         variant="ghost"
                         size="icon"
                         title={isDesktopCollapsed ? "Expand" : "Collapse"}
@@ -102,12 +114,12 @@ export function Sidebar({
                 </div>
 
                 {/* Main Navigation */}
-                <div className="p-2 space-y-1 flex-shrink-0">
+                <div className="flex-shrink-0 space-y-1 p-2.5">
                     <Button
                         onClick={handleNewChat}
                         className={cn(
-                            "w-full gap-3 text-sm h-10 justify-start bg-sidebar-border/50 hover:bg-sidebar-border text-foreground border border-sidebar-border mb-2 rounded-full",
-                            isDesktopCollapsed && "md:justify-center md:px-0 md:w-10 md:h-10 md:rounded-lg"
+                            "mb-2 h-10 w-full justify-start gap-3 rounded-xl border border-primary/15 bg-primary/10 text-sm text-primary hover:border-primary/25 hover:bg-primary/15 hover:text-primary active:scale-[0.99]",
+                            isDesktopCollapsed && "md:h-10 md:w-10 md:justify-center md:rounded-xl md:px-0"
                         )}
                         variant="ghost"
                         title="New Thread"
@@ -117,9 +129,9 @@ export function Sidebar({
                     </Button>
 
                     <Button
-                        onClick={() => handleNavigation('#/')}
+                        onClick={() => handleNavigation('#/welcome')}
                         className={cn(
-                            "w-full gap-3 text-sm h-9 justify-start text-muted-foreground hover:text-foreground",
+                            "h-9 w-full justify-start gap-3 rounded-xl text-sm text-muted-foreground hover:text-foreground",
                             isDesktopCollapsed && "md:justify-center md:px-0"
                         )}
                         variant="ghost"
@@ -130,22 +142,22 @@ export function Sidebar({
                     </Button>
 
                     <Button
-                        onClick={() => handleNavigation('#/not-implemented')}
+                        onClick={() => handleNavigation('#/discover')}
                         className={cn(
-                            "w-full gap-3 text-sm h-9 justify-start text-muted-foreground hover:text-foreground",
+                            "h-9 w-full justify-start gap-3 rounded-xl text-sm text-muted-foreground hover:text-foreground",
                             isDesktopCollapsed && "md:justify-center md:px-0"
                         )}
                         variant="ghost"
-                        title="Discover"
+                        title="Discover AI news"
                     >
                         <FiCompass className="w-4 h-4 flex-shrink-0" />
                         <span className={cn(isDesktopCollapsed && "md:hidden", "truncate")}>Discover</span>
                     </Button>
 
                     <Button
-                        onClick={() => handleNavigation('#/not-implemented')}
+                        onClick={() => handleNavigation('#/spaces')}
                         className={cn(
-                            "w-full gap-3 text-sm h-9 justify-start text-muted-foreground hover:text-foreground",
+                            "h-9 w-full justify-start gap-3 rounded-xl text-sm text-muted-foreground hover:text-foreground",
                             isDesktopCollapsed && "md:justify-center md:px-0"
                         )}
                         variant="ghost"
@@ -155,62 +167,70 @@ export function Sidebar({
                         <span className={cn(isDesktopCollapsed && "md:hidden", "truncate")}>Spaces</span>
                     </Button>
 
-                    <Button
-                        onClick={() => handleNavigation('#/not-implemented')}
-                        className={cn(
-                            "w-full gap-3 text-sm h-9 justify-start text-muted-foreground hover:text-foreground",
-                            isDesktopCollapsed && "md:justify-center md:px-0"
-                        )}
-                        variant="ghost"
-                        title="Library"
-                    >
-                        <FiBookOpen className="w-4 h-4 flex-shrink-0" />
-                        <span className={cn(isDesktopCollapsed && "md:hidden", "truncate")}>Library</span>
-                    </Button>
                 </div>
 
                 {/* Thread History */}
                 <div className={cn(
-                    "flex-1 flex flex-col min-h-0 mt-2",
+                    "mt-3 flex min-h-0 flex-1 flex-col",
                     isDesktopCollapsed && "md:hidden"
                 )}>
-                    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider flex-shrink-0">
+                    <div className="flex-shrink-0 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
                         Threads
                     </div>
 
                     <ScrollArea className="flex-1 min-h-0 px-2">
-                        <div className="space-y-1 pb-4">
+                        <div className="space-y-3 pb-4">
                             {conversations.length === 0 ? (
                                 <div className="px-3 py-6 text-center text-sm text-muted-foreground/50">
                                     No threads yet
                                 </div>
                             ) : (
-                                conversations.map((conversation) => (
-                                    <div
-                                        key={conversation.id}
-                                        onClick={() => handleSelectConversation(conversation.id)}
-                                        className={cn(
-                                            'group flex items-start gap-2 rounded-lg px-3 py-2.5 text-sm cursor-pointer transition-colors',
-                                            activeConversationId === conversation.id
-                                                ? 'bg-sidebar-accent text-sidebar-foreground'
-                                                : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-                                        )}
-                                    >
-                                        <FiMessageSquare className="w-4 h-4 shrink-0 mt-0.5" />
-                                        <span className="flex-1 text-sm leading-relaxed break-words">
-                                            {conversation.title}
-                                        </span>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-transparent"
-                                            onClick={(e) => handleDeleteConversation(conversation.id, e)}
-                                            title="Delete thread"
-                                        >
-                                            <FiTrash2 className="w-3.5 h-3.5" />
-                                        </Button>
-                                    </div>
-                                ))
+                                <>
+                                    {[...spaces.map((space) => ({
+                                        id: space.id,
+                                        name: space.name,
+                                        items: conversations.filter((conversation) => conversation.spaceId === space.id),
+                                    })), {
+                                        id: 'unorganized',
+                                        name: 'Unorganized',
+                                        items: conversations.filter((conversation) => !conversation.spaceId),
+                                    }].filter((group) => group.items.length > 0).map((group) => (
+                                        <section key={group.id} className="space-y-1">
+                                            {spaces.length > 0 && (
+                                                <h3 className="truncate px-3 pt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+                                                    {group.name}
+                                                </h3>
+                                            )}
+                                            {group.items.map((conversation) => (
+                                                <div
+                                                    key={conversation.id}
+                                                    onClick={() => handleSelectConversation(conversation.id)}
+                                                    className={cn(
+                                                        'group flex cursor-pointer items-start gap-2 rounded-xl px-3 py-2.5 text-sm transition-colors',
+                                                        activeConversationId === conversation.id
+                                                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                                                            : 'text-muted-foreground hover:bg-sidebar-accent/65 hover:text-sidebar-foreground'
+                                                    )}
+                                                >
+                                                    <FiMessageSquare className="mt-0.5 h-4 w-4 shrink-0" />
+                                                    <span className="flex-1 break-words text-sm leading-relaxed">
+                                                        {conversation.title}
+                                                    </span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-7 w-7 shrink-0 rounded-lg text-muted-foreground opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
+                                                        onClick={(event) => handleDeleteConversation(conversation.id, event)}
+                                                        title="Delete chat"
+                                                        aria-label={`Delete ${conversation.title}`}
+                                                    >
+                                                        <FiTrash2 className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </section>
+                                    ))}
+                                </>
                             )}
                         </div>
                     </ScrollArea>
@@ -219,15 +239,18 @@ export function Sidebar({
                 {/* Bottom Section (Footer) */}
                 <div className="p-2 border-t border-sidebar-border mt-auto flex-shrink-0 space-y-1">
                     <Button
-                        onClick={() => handleNavigation('#/not-implemented')}
+                        onClick={() => {
+                            onDownload?.();
+                            onMobileClose?.();
+                        }}
                         className={cn(
                             "w-full gap-3 text-sm h-9 justify-start text-muted-foreground hover:text-foreground",
                             isDesktopCollapsed && "md:justify-center md:px-0"
                         )}
                         variant="ghost"
-                        title="Sign Up"
+                        title="Download conversation"
                     >
-                        <FiSmartphone className="w-4 h-4 flex-shrink-0" />
+                        <FiDownload className="w-4 h-4 flex-shrink-0" />
                         <span className={cn(isDesktopCollapsed && "md:hidden", "truncate")}>Download</span>
                     </Button>
 
@@ -236,13 +259,13 @@ export function Sidebar({
                     </div>
 
                     <Button
-                        onClick={() => handleNavigation('#/not-implemented')}
+                        onClick={() => handleNavigation('#/settings')}
                         className={cn(
                             "w-full gap-3 text-sm h-9 justify-start text-muted-foreground hover:text-foreground",
                             isDesktopCollapsed && "md:justify-center md:px-0"
                         )}
                         variant="ghost"
-                        title="Settings"
+                        title="Settings & profile"
                     >
                         <FiSettings className="w-4 h-4 flex-shrink-0" />
                         <span className={cn(isDesktopCollapsed && "md:hidden", "truncate")}>Settings</span>
@@ -253,13 +276,31 @@ export function Sidebar({
                         isDesktopCollapsed && "hidden"
                     )}>
                         <div className="flex flex-col">
-                            <span className="text-xs font-medium text-foreground">Pro</span>
-                            <span className="text-[10px] text-muted-foreground">Upgrade</span>
+                            <span className="text-xs font-medium text-foreground">Moose</span>
+                            <span className="text-[10px] text-muted-foreground">AI search</span>
                         </div>
-                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                        <MooseLogo size="sm" />
                     </div>
                 </div>
             </aside>
+            <AppDialog
+                title="Delete this chat?"
+                description={conversationToDelete?.title}
+                open={conversationToDelete !== null}
+                onClose={() => setConversationToDelete(null)}
+            >
+                <p className="text-sm leading-6 text-muted-foreground">
+                    This chat and its messages will be permanently removed from your history.
+                </p>
+                <div className="mt-6 flex justify-end gap-3">
+                    <Button type="button" variant="outline" className="rounded-xl" onClick={() => setConversationToDelete(null)}>
+                        Keep chat
+                    </Button>
+                    <Button type="button" variant="destructive" className="rounded-xl" onClick={confirmDeleteConversation}>
+                        Delete chat
+                    </Button>
+                </div>
+            </AppDialog>
         </>
     );
 }

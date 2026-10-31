@@ -6,16 +6,27 @@ export interface Conversation {
     id: string;
     title: string;
     messages: Message[];
+    spaceId: string | null;
     createdAt: number;
     updatedAt: number;
 }
 
+export interface ChatSpace {
+    id: string;
+    name: string;
+    createdAt: number;
+}
+
 interface ChatStore {
     conversations: Conversation[];
+    spaces: ChatSpace[];
     activeConversationId: string | null;
 
     // Actions
     createConversation: () => string;
+    createSpace: (name: string) => string;
+    deleteSpace: (id: string) => void;
+    assignConversationToSpace: (conversationId: string, spaceId: string | null) => void;
     deleteConversation: (id: string) => void;
     setActiveConversation: (id: string) => void;
     addMessage: (conversationId: string, message: Message) => void;
@@ -28,6 +39,7 @@ export const useChatStore = create<ChatStore>()(
     persist(
         (set, get) => ({
             conversations: [],
+            spaces: [],
             activeConversationId: null,
 
             createConversation: () => {
@@ -36,6 +48,7 @@ export const useChatStore = create<ChatStore>()(
                     id,
                     title: 'New Chat',
                     messages: [],
+                    spaceId: null,
                     createdAt: Date.now(),
                     updatedAt: Date.now(),
                 };
@@ -46,6 +59,32 @@ export const useChatStore = create<ChatStore>()(
                 }));
 
                 return id;
+            },
+
+            createSpace: (name) => {
+                const id = `space_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+                const space: ChatSpace = { id, name: name.trim(), createdAt: Date.now() };
+                set((state) => ({ spaces: [space, ...state.spaces] }));
+                return id;
+            },
+
+            deleteSpace: (id) => {
+                set((state) => ({
+                    spaces: state.spaces.filter((space) => space.id !== id),
+                    conversations: state.conversations.map((conversation) =>
+                        conversation.spaceId === id ? { ...conversation, spaceId: null } : conversation
+                    ),
+                }));
+            },
+
+            assignConversationToSpace: (conversationId, spaceId) => {
+                set((state) => ({
+                    conversations: state.conversations.map((conversation) =>
+                        conversation.id === conversationId
+                            ? { ...conversation, spaceId, updatedAt: Date.now() }
+                            : conversation
+                    ),
+                }));
             },
 
             deleteConversation: (id) => {
@@ -115,6 +154,18 @@ export const useChatStore = create<ChatStore>()(
         }),
         {
             name: 'chat-storage',
+            version: 2,
+            migrate: (persistedState) => {
+                const state = persistedState as Partial<ChatStore> | undefined;
+                return {
+                    ...state,
+                    spaces: state?.spaces ?? [],
+                    conversations: (state?.conversations ?? []).map((conversation) => ({
+                        ...conversation,
+                        spaceId: conversation.spaceId ?? null,
+                    })),
+                };
+            },
         }
     )
 );

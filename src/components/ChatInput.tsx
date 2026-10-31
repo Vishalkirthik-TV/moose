@@ -1,110 +1,79 @@
-import { useState, type KeyboardEvent } from 'react';
-import { FiArrowUp, FiSearch, FiPaperclip, FiGlobe } from 'react-icons/fi';
+import { useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { FiArrowUp, FiSearch, FiLoader } from 'react-icons/fi';
 import { Textarea } from './ui/textarea';
 
 interface ChatInputProps {
     onSend: (message: string) => void;
     disabled?: boolean;
+    showHint?: boolean;
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, disabled = false, showHint = true }: ChatInputProps) {
     const [message, setMessage] = useState('');
-    const [focusMode, setFocusMode] = useState<'all' | 'academic' | 'youtube'>('all');
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const handleSend = () => {
-        if (message.trim() && !disabled) {
-            onSend(message);
-            setMessage('');
-        }
+    useLayoutEffect(() => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        textarea.style.height = 'auto';
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 192)}px`;
+        textarea.style.overflowY = textarea.scrollHeight > 192 ? 'auto' : 'hidden';
+    }, [message]);
+
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const prompt = message.trim();
+        if (!prompt || disabled) return;
+
+        onSend(prompt);
+        setMessage('');
     };
 
     const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            handleSend();
+            e.currentTarget.form?.requestSubmit();
         }
     };
 
-    const cycleFocus = () => {
-        const modes: Array<'all' | 'academic' | 'youtube'> = ['all', 'academic', 'youtube'];
-        const currentIndex = modes.indexOf(focusMode);
-        setFocusMode(modes[(currentIndex + 1) % modes.length]);
-    };
-
-    const focusLabels = {
-        all: 'All',
-        academic: 'Academic',
-        youtube: 'YouTube'
-    };
-
     return (
-        <div className="sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent pt-4 pb-4 px-4">
-            <div className="max-w-3xl mx-auto">
-                <div className="relative bg-card border border-border/30 rounded-2xl shadow-lg focus-within:border-primary/50 focus-within:shadow-xl transition-all duration-200">
-                    {/* Top Row: Input */}
-                    <div className="flex items-center">
-                        {/* Search Icon */}
-                        <div className="pl-4 flex items-center pointer-events-none">
-                            <FiSearch className="w-5 h-5 text-muted-foreground/60" />
-                        </div>
-
-                        {/* Input */}
+        <div className="w-full px-4 pb-3 pt-2 sm:px-6 sm:pb-4">
+            <div className="mx-auto w-full max-w-3xl">
+                <form
+                    onSubmit={handleSubmit}
+                    className="rounded-[1.65rem] border border-border/80 bg-card/95 p-2 shadow-[0_12px_40px_-24px_rgba(20,35,27,0.35)] backdrop-blur-xl transition-[border-color,box-shadow] duration-200 focus-within:border-primary/50 focus-within:shadow-[0_14px_44px_-22px_rgba(40,100,70,0.32)]"
+                >
+                    <div className="flex items-end gap-2">
+                        <FiSearch aria-hidden="true" className="ml-2 mt-[0.85rem] h-5 w-5 shrink-0 self-start text-muted-foreground/65" />
                         <Textarea
+                            ref={textareaRef}
                             value={message}
-                            onChange={(e) => setMessage(e.target.value)}
+                            onChange={(event) => setMessage(event.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Ask anything..."
+                            aria-label="Ask Moose a question"
                             disabled={disabled}
-                            className="flex-1 min-h-[52px] max-h-[150px] py-3.5 px-3 bg-transparent border-0 focus-visible:ring-0 resize-none text-base placeholder:text-muted-foreground/50"
                             rows={1}
+                            className="max-h-48 min-h-12 flex-1 resize-none border-0 bg-transparent px-2 py-3 text-base leading-6 shadow-none placeholder:text-muted-foreground/65 focus-visible:border-0 focus-visible:ring-0 disabled:opacity-60 md:text-base"
                         />
-
-                        {/* Submit Button */}
-                        <div className="pr-3 flex items-center">
-                            <button
-                                onClick={handleSend}
-                                disabled={disabled || !message.trim()}
-                                className="w-9 h-9 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
-                            >
-                                <FiArrowUp className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Bottom Row: Action Buttons */}
-                    <div className="flex items-center gap-1 px-3 pb-2.5 pt-0.5">
-                        {/* Focus Toggle */}
                         <button
-                            onClick={cycleFocus}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted rounded-lg transition-colors"
-                            title="Change search focus"
+                            type="submit"
+                            disabled={disabled || !message.trim()}
+                            aria-label={disabled ? 'Moose is responding' : 'Send message'}
+                            className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] bg-primary text-primary-foreground transition-[transform,background-color,opacity] duration-150 hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                         >
-                            <FiGlobe className="w-3.5 h-3.5" />
-                            <span>{focusLabels[focusMode]}</span>
+                            {disabled
+                                ? <FiLoader aria-hidden="true" className="h-5 w-5 animate-spin motion-reduce:animate-none" />
+                                : <FiArrowUp aria-hidden="true" className="h-5 w-5" />}
                         </button>
-
-                        {/* Attach Button */}
-                        <button
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted rounded-lg transition-colors"
-                            title="Attach file (coming soon)"
-                        >
-                            <FiPaperclip className="w-3.5 h-3.5" />
-                        </button>
-
-                        {/* Spacer */}
-                        <div className="flex-1" />
-
-                        {/* Pro Badge */}
-                        <span className="text-[10px] font-medium text-muted-foreground/50 px-2 py-1 bg-muted/30 rounded">
-                            Free
-                        </span>
                     </div>
-                </div>
-
-                {/* Subtle Disclaimer */}
-                <p className="text-center text-xs text-muted-foreground/40 mt-2">
-                    Powered by SerpAPI Google Search Engine
-                </p>
+                </form>
+                {showHint && (
+                    <p className="mt-2 text-center text-xs text-muted-foreground/75">
+                        Enter to send <span aria-hidden="true">·</span> Shift + Enter for a new line
+                    </p>
+                )}
             </div>
         </div>
     );

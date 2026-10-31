@@ -1,8 +1,5 @@
-import { FiMenu, FiMoon, FiSun, FiSidebar } from 'react-icons/fi';
-import { UserButton } from '@clerk/clerk-react';
+import { FiMenu, FiSidebar } from 'react-icons/fi';
 import { Button } from './ui/button';
-import { useTheme } from './theme-provider';
-import { MooseLogo } from './MooseLogo';
 
 interface HeaderProps {
     onMenuClick?: () => void;
@@ -11,12 +8,9 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick, onDesktopToggle, isDesktopSidebarCollapsed }: HeaderProps) {
-    const { theme, toggleTheme } = useTheme();
-
     return (
-        <header className="sticky top-0 z-30 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="flex h-12 sm:h-14 items-center justify-between px-3 sm:px-4">
-                {/* Left: Menu Button (Mobile) & Desktop Toggle */}
+        <header className={`sticky top-0 z-30 w-full border-b border-border/50 bg-background/70 backdrop-blur-xl ${!isDesktopSidebarCollapsed ? 'md:hidden' : ''}`}>
+            <div className="flex h-11 items-center justify-between px-3 sm:px-5">
                 <div className="flex items-center gap-2 sm:gap-3">
                     {/* Mobile menu button */}
                     <Button
@@ -41,29 +35,6 @@ export function Header({ onMenuClick, onDesktopToggle, isDesktopSidebarCollapsed
                         </Button>
                     )}
 
-                    {/* Brand - only show on mobile or when sidebar is collapsed */}
-                    <div className={`${!isDesktopSidebarCollapsed ? 'md:hidden' : ''}`}>
-                        <MooseLogo size="sm" showText />
-                    </div>
-                </div>
-
-                {/* Right: Theme Toggle & User */}
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleTheme}
-                        className="h-8 w-8 sm:h-9 sm:w-9"
-                    >
-                        {theme === 'dark' ? (
-                            <FiSun className="h-4 w-4 sm:h-5 sm:w-5" />
-                        ) : (
-                            <FiMoon className="h-4 w-4 sm:h-5 sm:w-5" />
-                        )}
-                    </Button>
-                    <div className="scale-90 sm:scale-100">
-                        <UserButton afterSignOutUrl="/" />
-                    </div>
                 </div>
             </div>
         </header>
