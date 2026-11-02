@@ -1,4 +1,5 @@
 import { FiChevronRight, FiHome, FiMenu, FiSidebar } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import type { ReactNode } from 'react';
 
@@ -55,13 +56,13 @@ export function Header({
                         </div>
                     ) : (
                         <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2 text-sm">
-                            <a
-                                href="#/welcome"
+                            <Link
+                                to="/"
                                 className="flex shrink-0 items-center gap-1.5 rounded-lg py-1 text-muted-foreground transition-colors hover:text-foreground"
                             >
                                 <FiHome aria-hidden="true" className="h-3.5 w-3.5" />
                                 <span>Home</span>
-                            </a>
+                            </Link>
                             <FiChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
                             <span aria-current="page" className="truncate font-medium text-foreground">{title}</span>
                         </nav>

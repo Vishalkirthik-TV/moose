@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { FiCheck, FiShare2 } from 'react-icons/fi';
 import { ChatList } from '@/components/ChatList';
 import { ChatInput } from '@/components/ChatInput';
@@ -18,16 +19,19 @@ export function Chat() {
         state.conversations.find((conversation) => conversation.id === state.activeConversationId) ?? null
     );
     const createConversation = useChatStore((state) => state.createConversation);
+    const location = useLocation();
+    const navigate = useNavigate();
     const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'shared'>('idle');
     const [shareError, setShareError] = useState<string | null>(null);
+    // Read once on mount: the Welcome page hands off ?prompt=... via the URL
     const initialPromptRef = useRef(
-        new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('prompt')
+        new URLSearchParams(location.search).get('prompt')
     );
     const initialWebSearchEnabledRef = useRef(
-        new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('webSearch') === '1'
+        new URLSearchParams(location.search).get('webSearch') === '1'
     );
     const initialThinkingEnabledRef = useRef(
-        new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('thinking') === '1'
+        new URLSearchParams(location.search).get('thinking') === '1'
     );
     const submittedInitialPromptRef = useRef(false);
 
@@ -43,18 +47,14 @@ export function Chat() {
         if (!prompt || !activeConversationId || submittedInitialPromptRef.current) return;
 
         submittedInitialPromptRef.current = true;
-        window.history.replaceState(
-            window.history.state,
-            '',
-            `${window.location.pathname}${window.location.search}#/chat`
-        );
+        navigate('/chat', { replace: true });
         const pendingOptions = consumePendingChatOptions();
         void sendMessage(prompt, {
             webSearchEnabled: pendingOptions?.webSearchEnabled ?? initialWebSearchEnabledRef.current,
             thinkingEnabled: pendingOptions?.thinkingEnabled ?? initialThinkingEnabledRef.current,
             attachments: pendingOptions?.attachments,
         });
-    }, [activeConversationId, sendMessage]);
+    }, [activeConversationId, navigate, sendMessage]);
 
     useEffect(() => {
         setShareStatus('idle');

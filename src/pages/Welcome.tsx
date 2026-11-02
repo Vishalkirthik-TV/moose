@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fi';
 import { motion, useReducedMotion } from 'framer-motion';
 import { UserButton } from '@clerk/clerk-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useChatStore } from '@/lib/store';
 import { useTheme } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
@@ -28,17 +29,18 @@ export function Welcome() {
     const { createConversation } = useChatStore();
     const { theme, toggleTheme } = useTheme();
     const prefersReducedMotion = useReducedMotion();
+    const navigate = useNavigate();
 
     const handleStartChat = (prompt: string) => {
         if (!prompt.trim()) return;
 
         createConversation();
-        window.location.assign(`#/chat?prompt=${encodeURIComponent(prompt.trim())}`);
+        navigate(`/chat?prompt=${encodeURIComponent(prompt.trim())}`);
     };
 
     const handleExplore = () => {
         createConversation();
-        window.location.assign('#/chat');
+        navigate('/chat');
     };
 
     return (
@@ -46,14 +48,14 @@ export function Welcome() {
             <div aria-hidden="true" className="welcome-hero-glow pointer-events-none absolute inset-0" />
             <div aria-hidden="true" className="welcome-hero-grid pointer-events-none absolute inset-0" />
             <header className="relative z-10 flex w-full items-center justify-between bg-background/55 px-4 py-3 backdrop-blur-2xl sm:px-8 sm:py-4">
-                <a href="#/welcome" aria-label="Moose home" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Link to="/" aria-label="Moose home" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <MooseLogo size="md" showText />
-                </a>
+                </Link>
                 <div className="flex items-center gap-1.5 sm:gap-3">
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => { window.location.hash = '#/discover'; }}
+                        onClick={() => { navigate('/discover'); }}
                         aria-label="Discover AI news"
                         className="h-9 rounded-full px-3 text-muted-foreground hover:text-foreground sm:px-4"
                     >

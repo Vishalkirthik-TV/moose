@@ -1,15 +1,14 @@
 import { SignIn, SignUp } from '@clerk/clerk-react';
-import { useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { MooseLogo } from '@/components/MooseLogo';
 
 export function Auth() {
-    const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+    const location = useLocation();
+    const mode = location.pathname === '/signup' ? 'signup' : 'signin';
 
-    // Listen for hash changes to switch between signin/signup
-    if (window.location.hash === '#/signup' && mode !== 'signup') {
-        setMode('signup');
-    } else if (window.location.hash === '#/signin' && mode !== 'signin') {
-        setMode('signin');
+    // Signed-out users landing anywhere except the auth routes go to sign in
+    if (location.pathname !== '/signin' && location.pathname !== '/signup') {
+        return <Navigate to="/signin" replace />;
     }
 
     return (
@@ -19,6 +18,9 @@ export function Auth() {
 
             {mode === 'signin' ? (
                 <SignIn
+                    routing="path"
+                    path="/signin"
+                    signUpUrl="/signup"
                     appearance={{
                         elements: {
                             rootBox: 'mx-auto w-full max-w-md',
@@ -29,11 +31,12 @@ export function Auth() {
                             formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-foreground',
                         },
                     }}
-                    routing="hash"
-                    signUpUrl="#/signup"
                 />
             ) : (
                 <SignUp
+                    routing="path"
+                    path="/signup"
+                    signInUrl="/signin"
                     appearance={{
                         elements: {
                             rootBox: 'mx-auto w-full max-w-md',
@@ -44,8 +47,6 @@ export function Auth() {
                             formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-foreground',
                         },
                     }}
-                    routing="hash"
-                    signInUrl="#/signin"
                 />
             )}
         </div>

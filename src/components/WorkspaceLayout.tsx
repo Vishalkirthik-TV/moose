@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { FiFileText, FiPrinter } from 'react-icons/fi';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
@@ -57,17 +58,17 @@ export function WorkspaceLayout({ children, headerActions, scrollable = false }:
     const selectedConversation = exportableConversations.find(
         (conversation) => conversation.id === selectedExportConversationId
     ) ?? null;
-    const currentPath = window.location.hash.split('?')[0];
-    const title = currentPath === '#/chat'
+    const currentPath = useLocation().pathname;
+    const title = currentPath === '/chat'
         ? conversations.find((conversation) => conversation.id === activeConversationId)?.title ?? 'New chat'
-        : currentPath === '#/discover'
+        : currentPath === '/discover'
             ? 'Discover'
-            : currentPath === '#/spaces'
+            : currentPath === '/spaces'
                 ? 'Spaces'
-                : currentPath === '#/settings'
+                : currentPath === '/settings'
                     ? 'Settings'
                     : 'Workspace';
-    const subtitle = currentPath === '#/chat' ? 'A thoughtful space for your questions' : 'Your Moose workspace';
+    const subtitle = currentPath === '/chat' ? 'A thoughtful space for your questions' : 'Your Moose workspace';
 
     const closeExportDialog = () => {
         setIsExportDialogOpen(false);

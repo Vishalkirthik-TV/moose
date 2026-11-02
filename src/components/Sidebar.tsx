@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useClerk } from '@clerk/clerk-react';
 import {
     FiPlus,
@@ -45,7 +46,8 @@ export function Sidebar({
         setActiveConversation,
         deleteConversation,
     } = useChatStore();
-    const currentRoute = window.location.hash.split('?')[0];
+    const currentRoute = useLocation().pathname;
+    const navigate = useNavigate();
 
     const navigationClass = (isActive: boolean) => cn(
         'group relative h-10 w-full justify-start gap-3 rounded-xl px-3 text-sm font-medium transition-[background-color,color,transform] duration-150 active:scale-[0.99]',
@@ -57,12 +59,12 @@ export function Sidebar({
 
     const handleNewChat = () => {
         createConversation();
-        handleNavigation('#/chat');
+        handleNavigation('/chat');
     };
 
     const handleSelectConversation = (id: string) => {
         setActiveConversation(id);
-        handleNavigation('#/chat');
+        handleNavigation('/chat');
     };
 
     const handleDeleteConversation = (id: string, e: React.MouseEvent) => {
@@ -77,8 +79,8 @@ export function Sidebar({
         setConversationToDelete(null);
     };
 
-    const handleNavigation = (hash: string) => {
-        window.location.assign(hash);
+    const handleNavigation = (path: string) => {
+        navigate(path);
         onMobileClose?.();
     };
 
@@ -86,7 +88,7 @@ export function Sidebar({
         setIsSigningOut(true);
         setSignOutError(null);
         try {
-            await signOut({ redirectUrl: `${window.location.origin}/#/signin` });
+            await signOut({ redirectUrl: `${window.location.origin}/signin` });
         } catch (error) {
             console.error('Unable to sign out:', error);
             setSignOutError('Could not sign out. Please try again.');
@@ -116,8 +118,8 @@ export function Sidebar({
             >
                 {/* Logo & Collapse Toggle */}
                 <div className={cn('relative flex h-[4.5rem] flex-shrink-0 items-center justify-between border-b border-sidebar-border px-4', isDesktopCollapsed && 'md:justify-center md:px-2')}>
-                    <a
-                        href="#/welcome"
+                    <Link
+                        to="/"
                         aria-label="Moose home"
                         title="Moose home"
                         onClick={() => onMobileClose?.()}
@@ -128,7 +130,7 @@ export function Sidebar({
                             showText
                             className={cn('font-semibold', isDesktopCollapsed && 'md:[&_span]:hidden')}
                         />
-                    </a>
+                    </Link>
                     <Button
                         onClick={onDesktopToggle}
                         className="hidden h-8 w-8 rounded-xl text-muted-foreground hover:bg-sidebar-accent hover:text-foreground md:flex"
@@ -162,24 +164,24 @@ export function Sidebar({
                         Workspace
                     </p>
                     <Button
-                        onClick={() => handleNavigation('#/discover')}
-                        className={navigationClass(currentRoute === '#/discover')}
+                        onClick={() => handleNavigation('/discover')}
+                        className={navigationClass(currentRoute === '/discover')}
                         variant="ghost"
                         title="Discover AI news"
-                        aria-current={currentRoute === '#/discover' ? 'page' : undefined}
+                        aria-current={currentRoute === '/discover' ? 'page' : undefined}
                     >
-                        <FiCompass className={cn('h-4 w-4 flex-shrink-0 transition-colors', currentRoute === '#/discover' && 'text-primary')} />
+                        <FiCompass className={cn('h-4 w-4 flex-shrink-0 transition-colors', currentRoute === '/discover' && 'text-primary')} />
                         <span className={cn(isDesktopCollapsed && "md:hidden", "truncate")}>Discover</span>
                     </Button>
 
                     <Button
-                        onClick={() => handleNavigation('#/spaces')}
-                        className={navigationClass(currentRoute === '#/spaces')}
+                        onClick={() => handleNavigation('/spaces')}
+                        className={navigationClass(currentRoute === '/spaces')}
                         variant="ghost"
                         title="Spaces"
-                        aria-current={currentRoute === '#/spaces' ? 'page' : undefined}
+                        aria-current={currentRoute === '/spaces' ? 'page' : undefined}
                     >
-                        <FiLayers className={cn('h-4 w-4 flex-shrink-0 transition-colors', currentRoute === '#/spaces' && 'text-primary')} />
+                        <FiLayers className={cn('h-4 w-4 flex-shrink-0 transition-colors', currentRoute === '/spaces' && 'text-primary')} />
                         <span className={cn(isDesktopCollapsed && "md:hidden", "truncate")}>Spaces</span>
                     </Button>
 
@@ -287,14 +289,14 @@ export function Sidebar({
                     </div>
 
                     <Button
-                        onClick={() => handleNavigation('#/settings')}
+                        onClick={() => handleNavigation('/settings')}
                         className={cn(
-                            navigationClass(currentRoute === '#/settings'),
+                            navigationClass(currentRoute === '/settings'),
                             isDesktopCollapsed && "md:justify-center md:px-0"
                         )}
                         variant="ghost"
                         title="Settings & profile"
-                        aria-current={currentRoute === '#/settings' ? 'page' : undefined}
+                        aria-current={currentRoute === '/settings' ? 'page' : undefined}
                     >
                         <FiSettings className="w-4 h-4 flex-shrink-0" />
                         <span className={cn(isDesktopCollapsed && "md:hidden", "truncate")}>Settings</span>
