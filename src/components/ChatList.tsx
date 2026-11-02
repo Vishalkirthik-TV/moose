@@ -6,9 +6,10 @@ interface ChatListProps {
     messagesEndRef: React.RefObject<HTMLDivElement | null>;
     onSend?: (message: string) => void;
     error?: string | null;
+    isWebOn?: boolean;
 }
 
-export function ChatList({ messages, messagesEndRef, onSend, error }: ChatListProps) {
+export function ChatList({ messages, messagesEndRef, onSend, error, isWebOn = false }: ChatListProps) {
     if (messages.length === 0) {
         return (
             <div className="flex flex-1 flex-col items-center justify-center p-6 md:p-12">
@@ -33,6 +34,7 @@ export function ChatList({ messages, messagesEndRef, onSend, error }: ChatListPr
                         message={message}
                         isFirst={index === 0}
                         onRelatedSelect={onSend}
+                        isWebOn={isWebOn}
                     />
                 ))}
                 {error && (

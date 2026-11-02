@@ -28,6 +28,7 @@
     "react-router-dom": "^7.18.5",
     "react-syntax-highlighter": "^16.1.0",
     "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
     "zustand": "^5.0.10"

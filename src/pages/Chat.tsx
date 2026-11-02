@@ -33,6 +33,9 @@ export function Chat() {
     const initialThinkingEnabledRef = useRef(
         new URLSearchParams(location.search).get('thinking') === '1'
     );
+    const [webSearchEnabled, setWebSearchEnabled] = useState(
+        new URLSearchParams(location.search).get('webSearch') === '1'
+    );
     const submittedInitialPromptRef = useRef(false);
 
     // Create initial conversation if none exists
@@ -49,8 +52,10 @@ export function Chat() {
         submittedInitialPromptRef.current = true;
         navigate('/chat', { replace: true });
         const pendingOptions = consumePendingChatOptions();
+        const initialWeb = pendingOptions?.webSearchEnabled ?? initialWebSearchEnabledRef.current;
+        setWebSearchEnabled(initialWeb);
         void sendMessage(prompt, {
-            webSearchEnabled: pendingOptions?.webSearchEnabled ?? initialWebSearchEnabledRef.current,
+            webSearchEnabled: initialWeb,
             thinkingEnabled: pendingOptions?.thinkingEnabled ?? initialThinkingEnabledRef.current,
             attachments: pendingOptions?.attachments,
         });
@@ -138,9 +143,18 @@ export function Chat() {
                 </div>
             )}
         >
-            <ChatList messages={messages} messagesEndRef={messagesEndRef} onSend={sendMessage} error={error} />
+            <ChatList
+                messages={messages}
+                messagesEndRef={messagesEndRef}
+                onSend={sendMessage}
+                error={error}
+                isWebOn={webSearchEnabled}
+            />
             <ChatInput
-                onSend={(prompt, options) => sendMessage(prompt, options)}
+                onSend={(prompt, options) => {
+                    setWebSearchEnabled(options.webSearchEnabled);
+                    void sendMessage(prompt, options);
+                }}
                 disabled={isLoading}
                 defaultWebSearchEnabled={initialWebSearchEnabledRef.current}
                 defaultThinkingEnabled={initialThinkingEnabledRef.current}

@@ -12,4 +12,5 @@ export interface Message {
     sources?: Source[];
     sentAt?: number;
     attachments?: string[];
+    isWebSearch?: boolean;
 }

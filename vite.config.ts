@@ -7,6 +7,24 @@ import { defineConfig } from "vite"
 export default defineConfig({
   envPrefix: "VITE_",
   plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      '/api/serpapi': {
+        target: 'https://serpapi.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/serpapi/, ''),
+      },
+    },
+  },
+  preview: {
+    proxy: {
+      '/api/serpapi': {
+        target: 'https://serpapi.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/serpapi/, ''),
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

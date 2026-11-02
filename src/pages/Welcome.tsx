@@ -47,36 +47,38 @@ export function Welcome() {
         <div className="relative flex min-h-svh flex-col overflow-x-hidden bg-background selection:bg-primary/20">
             <div aria-hidden="true" className="welcome-hero-glow pointer-events-none absolute inset-0" />
             <div aria-hidden="true" className="welcome-hero-grid pointer-events-none absolute inset-0" />
-            <header className="relative z-10 flex w-full items-center justify-between bg-background/55 px-4 py-3 backdrop-blur-2xl sm:px-8 sm:py-4">
-                <Link to="/" aria-label="Moose home" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    <MooseLogo size="md" showText />
-                </Link>
-                <div className="flex items-center gap-1.5 sm:gap-3">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => { navigate('/discover'); }}
-                        aria-label="Discover AI news"
-                        className="h-9 rounded-full px-3 text-muted-foreground hover:text-foreground sm:px-4"
-                    >
-                        <FiCompass aria-hidden="true" className="h-4 w-4 sm:hidden" />
-                        <span className="hidden sm:inline">Discover</span>
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleTheme}
-                        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} appearance`}
-                        className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
-                    >
-                        {theme === 'dark' ? (
-                            <FiSun aria-hidden="true" className="h-4 w-4" />
-                        ) : (
-                            <FiMoon aria-hidden="true" className="h-4 w-4" />
-                        )}
-                    </Button>
-                    <div className="ml-1 border-l border-border/70 pl-3">
-                        <UserButton afterSignOutUrl="/" />
+            <header className="sticky top-0 z-30 w-full border-b border-border/50 bg-background/60 backdrop-blur-2xl">
+                <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-8">
+                    <Link to="/" aria-label="Moose home" className="shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        <MooseLogo size="md" showText />
+                    </Link>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { navigate('/discover'); }}
+                            aria-label="Discover AI news"
+                            className="h-9 gap-2 rounded-full border border-transparent px-3 text-muted-foreground transition-colors hover:border-border/60 hover:bg-card/70 hover:text-foreground sm:px-4"
+                        >
+                            <FiCompass aria-hidden="true" className="h-4 w-4" />
+                            <span className="hidden sm:inline">Discover</span>
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={toggleTheme}
+                            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} appearance`}
+                            className="h-9 w-9 rounded-full border border-transparent text-muted-foreground transition-colors hover:border-border/60 hover:bg-card/70 hover:text-foreground"
+                        >
+                            {theme === 'dark' ? (
+                                <FiSun aria-hidden="true" className="h-4 w-4" />
+                            ) : (
+                                <FiMoon aria-hidden="true" className="h-4 w-4" />
+                            )}
+                        </Button>
+                        <div className="ml-1.5 border-l border-border/60 pl-3">
+                            <UserButton afterSignOutUrl="/" />
+                        </div>
                     </div>
                 </div>
             </header>
@@ -136,24 +138,6 @@ export function Welcome() {
                         role="img"
                         aria-label="Animated preview of a Moose conversation"
                     >
-                        <motion.div
-                            aria-hidden="true"
-                            animate={prefersReducedMotion ? undefined : { y: [0, -8, 0] }}
-                            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                            className="absolute -left-3 top-12 z-10 hidden rounded-2xl border border-border/70 bg-card/90 px-3.5 py-2.5 text-xs font-medium text-foreground shadow-lg backdrop-blur-xl sm:flex sm:items-center sm:gap-2"
-                        >
-                            <FiGlobe className="h-4 w-4 text-primary" />
-                            Search-backed answers
-                        </motion.div>
-                        <motion.div
-                            aria-hidden="true"
-                            animate={prefersReducedMotion ? undefined : { y: [0, 7, 0] }}
-                            transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut', delay: 0.35 }}
-                            className="absolute -right-2 bottom-16 z-10 hidden rounded-2xl border border-border/70 bg-card/90 px-3.5 py-2.5 text-xs font-medium text-foreground shadow-lg backdrop-blur-xl sm:flex sm:items-center sm:gap-2"
-                        >
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary">✓</span>
-                            Sources you can trust
-                        </motion.div>
                         <div className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-card/85 p-3 shadow-[0_32px_90px_-42px_rgba(28,66,43,0.5)] backdrop-blur-2xl sm:p-5">
                             <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-transparent to-amber-500/[0.07]" />
                             <div className="relative flex items-center justify-between border-b border-border/60 px-2 pb-4">

@@ -62,6 +62,15 @@ export function useChat() {
         }
 
         try {
+            // Add assistant message with potential placeholder
+            const assistantMessage: Message = {
+                role: 'assistant',
+                content: '',
+                isWebSearch: webSearchEnabled,
+            };
+            addMessage(conversationId, assistantMessage);
+            hasAssistantPlaceholder = true;
+
             let searchContext = '';
             let sources: Message['sources'] = [];
 
@@ -71,6 +80,7 @@ export function useChat() {
                     throw new Error('Web search found no results. Try a different query or turn web search off.');
                 }
                 sources = searchResponse.results;
+                updateLastMessage(conversationId, { sources });
                 searchContext = `
 Search Results:
 ${searchResponse.results.map((r, i) => `[${i + 1}] "${r.title}" - ${r.snippet} (Source: ${r.link})`).join('\n')}
@@ -101,22 +111,13 @@ INSTRUCTIONS:
                 userMessage,
             ];
 
-            // Add assistant message with potential placeholder
-            const assistantMessage: Message = {
-                role: 'assistant',
-                content: '',
-                sources: sources.length > 0 ? sources : undefined
-            };
-            addMessage(conversationId, assistantMessage);
-            hasAssistantPlaceholder = true;
-
             // Call API
             const response = await requestChatAnswer(allMessages, providerId, modelId, thinkingEnabled);
             if (!response.trim()) {
                 throw new Error('The AI service returned an empty answer. Please try again.');
             }
 
-            updateLastMessage(conversationId, response);
+            updateLastMessage(conversationId, { content: response, sources: sources.length > 0 ? sources : undefined });
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Failed to send message';
             setError(message);

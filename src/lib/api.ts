@@ -176,6 +176,27 @@ export async function requestChatAnswer(
     return text;
 }
 
+async function fetchSerpApi(params: URLSearchParams): Promise<Response> {
+    // 1. Try local Vite dev/preview proxy (bypasses browser CORS restriction)
+    try {
+        const proxyResponse = await fetch(`/api/serpapi/search.json?${params}`);
+        if (proxyResponse.status !== 404) {
+            return proxyResponse;
+        }
+    } catch {
+        // Fall through if local proxy is unavailable
+    }
+
+    // 2. Try direct call to SerpApi
+    try {
+        return await fetch(`https://serpapi.com/search.json?${params}`);
+    } catch {
+        // 3. Fallback to CORS proxy when direct browser call is blocked by CORS
+        const targetUrl = encodeURIComponent(`https://serpapi.com/search.json?${params}`);
+        return await fetch(`https://corsproxy.io/?url=${targetUrl}`);
+    }
+}
+
 export async function requestWebSearch(query: string): Promise<SearchResponse> {
     const apiKey = import.meta.env.VITE_SERPAPI_KEY;
     if (!apiKey) {
@@ -188,7 +209,7 @@ export async function requestWebSearch(query: string): Promise<SearchResponse> {
         api_key: apiKey,
         num: '8',
     });
-    const response = await fetch(`https://serpapi.com/search.json?${params}`);
+    const response = await fetchSerpApi(params);
     const payload = await readJson(response, 'Web search');
     if (typeof payload !== 'object' || payload === null) {
         throw new Error('Web search returned an invalid response.');

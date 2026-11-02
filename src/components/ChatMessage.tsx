@@ -1,13 +1,9 @@
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
 import type { Message } from '@/lib/openai';
-import ReactMarkdown from 'react-markdown';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { atomOneDark, docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { useTheme } from '@/components/theme-provider';
 import { SourceCarousel } from './SourceCarousel';
 import { ThinkingIndicator } from './ThinkingIndicator';
 import { RelatedQuestions } from './RelatedQuestions';
+import { Markdown } from './Markdown';
 import { FiCopy, FiShare2, FiCheck } from 'react-icons/fi';
 import { MooseLogo } from './MooseLogo';
 
@@ -15,13 +11,13 @@ interface ChatMessageProps {
     message: Message;
     isFirst?: boolean;
     onRelatedSelect?: (question: string) => void;
+    isWebOn?: boolean;
 }
 
-export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
+export function ChatMessage({ message, onRelatedSelect, isWebOn = false }: ChatMessageProps) {
     const isUser = message.role === 'user';
     const isSystem = message.role === 'system';
     const [copied, setCopied] = useState(false);
-    const { theme } = useTheme();
     const sentAtLabel = message.sentAt
         ? (() => {
             const sentAt = new Date(message.sentAt);
@@ -92,6 +88,10 @@ export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
         );
     }
 
+    const isMessageWebOn = message.isWebSearch !== undefined
+        ? message.isWebSearch
+        : Boolean((message.sources && message.sources.length > 0) || isWebOn);
+
     // Assistant message: Structured answer with sources
     return (
         <div className="w-full px-4 pb-8 md:px-0">
@@ -113,95 +113,7 @@ export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
 
                     {message.content ? (
                         <>
-                            <div className="prose prose-neutral dark:prose-invert max-w-none text-foreground leading-relaxed text-base">
-                                <ReactMarkdown
-                                    components={{
-                                        a: ({ children, href }) => (
-                                            <a
-                                                href={href}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-primary hover:underline font-medium"
-                                            >
-                                                {children}
-                                            </a>
-                                        ),
-                                        p: ({ children }) => (
-                                            <p className="mb-4 last:mb-0">{children}</p>
-                                        ),
-                                        ul: ({ children }) => (
-                                            <ul className="list-disc pl-5 mb-4 space-y-1">{children}</ul>
-                                        ),
-                                        ol: ({ children }) => (
-                                            <ol className="list-decimal pl-5 mb-4 space-y-1">{children}</ol>
-                                        ),
-                                        strong: ({ children }) => (
-                                            <strong className="font-semibold text-foreground">{children}</strong>
-                                        ),
-                                        code: ({ node, className, children, ...props }) => {
-                                            void node;
-                                            const match = /language-(\w+)/.exec(className || '');
-                                            const language = match ? match[1] : 'text';
-                                            const codeString = String(children).replace(/\n$/, '');
-                                            const isInline = !className?.startsWith('language-') && !String(children).endsWith('\n');
-
-                                            if (isInline) {
-                                                return (
-                                                    <code
-                                                        className="px-1.5 py-0.5 rounded-md bg-muted/60 font-mono text-sm text-primary"
-                                                        {...props}
-                                                    >
-                                                        {children}
-                                                    </code>
-                                                );
-                                            }
-
-                                            return (
-                                                <div className={cn("relative w-full overflow-hidden rounded-lg my-4 border border-border/50", theme === 'dark' ? 'bg-[#282c34]' : 'bg-[#f8f8f8]')}>
-                                                    {/* Code Header */}
-                                                    <div className={cn("flex items-center justify-between px-4 py-2 border-b text-xs select-none", theme === 'dark' ? 'bg-[#21252b] border-white/10 text-gray-400' : 'bg-[#e5e7eb] border-gray-300 text-gray-600')}>
-                                                        <span className="font-mono font-medium lowercase">{language}</span>
-                                                        <button
-                                                            onClick={async () => {
-                                                                await navigator.clipboard.writeText(codeString);
-                                                                // You might want a toast here
-                                                            }}
-                                                            className={cn("flex items-center gap-1.5 transition-colors", theme === 'dark' ? 'hover:text-white' : 'hover:text-black')}
-                                                        >
-                                                            <FiCopy className="w-3.5 h-3.5" />
-                                                            <span>Copy</span>
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Code Content */}
-                                                    <div className="w-full overflow-x-auto">
-                                                        <SyntaxHighlighter
-                                                            language={language}
-                                                            style={theme === 'dark' ? atomOneDark : docco}
-                                                            customStyle={{
-                                                                margin: 0,
-                                                                padding: '1.5rem',
-                                                                background: 'transparent',
-                                                                fontSize: '0.875rem',
-                                                                lineHeight: '1.5',
-                                                            }}
-                                                            wrapLongLines={false} // Allow horizontal scroll for overflow
-                                                            PreTag="div"
-                                                        >
-                                                            {codeString}
-                                                        </SyntaxHighlighter>
-                                                    </div>
-                                                </div>
-                                            );
-                                        },
-                                        pre: ({ children }) => (
-                                            <div className="not-prose">{children}</div>
-                                        ),
-                                    }}
-                                >
-                                    {message.content}
-                                </ReactMarkdown>
-                            </div>
+                            <Markdown content={message.content} />
 
                             {/* Action Buttons */}
                             <div className="mt-6 flex items-center gap-2 border-t border-border/50 pt-4">
@@ -230,7 +142,7 @@ export function ChatMessage({ message, onRelatedSelect }: ChatMessageProps) {
                             )}
                         </>
                     ) : (
-                        <ThinkingIndicator />
+                        <ThinkingIndicator isWebOn={isMessageWebOn} />
                     )}
                 </div>
             </div>
